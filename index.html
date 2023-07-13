@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Game</title>
+  <style>
+    #gameCanvas {
+      border: 1px solid black;
+    }
+    #fullscreen {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+<div id="fullscreen">
+<canvas id="gameCanvas"></canvas>
+</div>
+  <script>
+    // ゲームオブジェクト
+    var game = {
+      canvas: document.getElementById("gameCanvas"),
+      context: null,
+      player: null,
+      enemy: null,
+      enemyClones: [],
+      keysDown: {},
+      initialize: function() {
+        this.context = this.canvas.getContext("2d");
+        this.player = new GameObject("Player.gif", 50, 50);
+        this.enemy = new GameObject("Enemy.gif", this.canvas.width - 50, this.canvas.height - 50);
+        this.registerEventListeners();
+        this.gameLoop();
+      },
+      registerEventListeners: function() {
+        window.addEventListener("keydown", function(event) {
+          game.keysDown[event.keyCode] = true;
+        });
+        window.addEventListener("keyup", function(event) {
+          delete game.keysDown[event.keyCode];
+        });
+      },
+      gameLoop: function() {
+        game.handleInput();
+        game.update();
+        game.render();
+        requestAnimationFrame(game.gameLoop);
+      },
+      handleInput: function() {
+        // プレイヤーの入力処理
+        if (37 in game.keysDown) { // 左
+          game.player.x -= 5;
+        }
+        if (38 in game.keysDown) { // 上
+          game.player.y -= 5;
+        }
+        if (39 in game.keysDown) { // 右
+          game.player.x += 5;
+        }
+        if (40 in game.keysDown) { // 下
+          game.player.y += 5;
+        }
+      },
+      update: function() {
+        // 敵の移動処理
+        game.enemy.x += (game.player.x - game.enemy.x) * 0.01;
+        game.enemy.y += (game.player.y - game.enemy.y) * 0.01;
+        
+        // クローンの生成
+        if (Math.random() < 0.01) {
+          var clone = new GameObject("Enemy.gif", Math.random() * game.canvas.width, Math.random() * game.canvas.height);
+          game.enemyClones.push(clone);
+        }
+        
+        // クローンの移動処理
+        for (var i = 0; i < game.enemyClones.length; i++) {
+          var clone = game.enemyClones[i];
+          clone.x += (game.player.x - clone.x) * 0.01;
+          clone.y += (game.player.y - clone.y) * 0.01;
+        }
+      },
+      render: function() {
+        // 画面のクリア
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // プレイヤーの描画
+        this.player.draw();
+        
+        // 敵の描画
+        this.enemy.draw();
+        
+        // クローンの描画
+        for (var i = 0; i < game.enemyClones.length; i++) {
+          var clone = game.enemyClones[i];
+          clone.draw();
+        }
+      }
+    };
+
+    // ゲームオブジェクトのクラス
+    function GameObject(imageSrc, x, y) {
+      this.image = new Image();
+      this.image.src = imageSrc;
+      this.x = x;
+      this.y = y;
+    }
+
+    GameObject.prototype.draw = function() {
+      game.context.drawImage(this.image, this.x, this.y);
+    };
+
+    // ゲームの初期化
+    game.initialize();
+  </script>
+</body>
+</html>
